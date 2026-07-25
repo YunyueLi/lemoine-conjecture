@@ -21,11 +21,12 @@ Representation Statistics for Lemoine's Conjecture}
 \begin{abstract}
 Lemoine's conjecture (1895) asserts that every odd integer $n>5$ can be
 written as $n=p+2q$ with $p,q$ prime. We report an exhaustive verification
-for all odd $n \le 10^{12}$ (no counterexample; 55 minutes on eight
+for all odd $n \le 2\times10^{13}$ (no counterexample; 19 hours on eight
 consumer cores),
 computing simultaneously the record values of the minimal doubled prime
 ($n=p+2q$, minimal $q$) and of the minimal undoubled prime ($n=2p+q$,
-minimal $q$), the latter cross-validating the OEIS sequence A002091.
+minimal $q$), the latter cross-validating --- and extending by one
+term --- the OEIS sequence A002091.
 Using FFT convolution we further compute the exact representation function
 $r(n)=\#\{(p,q):n=p+2q\}$ for every odd $n\le 10^{7}$, extended by
 windowed exact counts up to $10^{8}$, confirming a
@@ -68,14 +69,13 @@ equivalent form of a strong version of the conjecture; another claimed
 proof \cite{ghanim} has not gained acceptance.
 
 Our contributions: (i) a single reproducible exhaustive verification to
-$10^{12}$ % TODO: 最终上界
-producing both minimal-prime record sequences, one of which
-cross-validates A002091 exactly; (ii) exact representation counts $r(n)$
+$2\times10^{13}$, producing both minimal-prime record sequences, one of
+which reproduces the full A002091 $b$-file and extends it by one term; (ii) exact representation counts $r(n)$
 for all odd $n\le10^7$ via FFT convolution; (iii) a numerical test of the
 Hardy--Littlewood-type asymptotic, including the first (to our knowledge)
 empirical determination of the decay exponent of its second-order term;
-(iv) open-source, single-machine code: the $10^{12}$ verification takes
-under one hour on a consumer laptop.
+(iv) open-source, single-machine code: verification to $10^{12}$ takes
+under one hour on a consumer laptop, and to $2\times10^{13}$ under a day.
 
 \section{A Hardy--Littlewood heuristic for $r(n)$}\label{sec:heuristic}
 
@@ -97,8 +97,7 @@ whenever $\ell \nmid q$, so the joint probability is $1-1/\ell$ and
 $\delta_\ell = (1-1/\ell)/(1-1/\ell)^2 = \ell/(\ell-1)$.
 Writing the full product over the factors $1-1/(\ell-1)^2$ and
 correcting at $\ell \mid n$ by
-$\frac{\ell/(\ell-1)}{1-1/(\ell-1)^2} = \frac{\ell-1}{\ell-2}$,
-Collecting the product over all $\ell$,
+$\frac{\ell/(\ell-1)}{1-1/(\ell-1)^2} = \frac{\ell-1}{\ell-2}$, we obtain
 \[
 r(n) \;\approx\; 2C_2\,K(n)\,I(n),
 \qquad
@@ -124,35 +123,38 @@ per $n$. The $10^{10}$ prefix agrees with an independent non-segmented
 implementation.
 
 \subsection{Results}
-No counterexample exists below $10^{12}$: every odd
-$7 \le n \le 10^{12}$ admits both decompositions $n=p+2q$ and $n=2p+q$.
-The full run took 3314 seconds on eight performance cores of a consumer
-laptop (Apple M-series). The minimal doubled prime attains its maximum
-$q_{\min} = 3079$ at $n = 853\,036\,242\,229$ (34 record values in
+No counterexample exists below $2\times10^{13}$: every odd
+$7 \le n \le 2\times10^{13}$ admits both decompositions $n=p+2q$ and
+$n=2p+q$. The full run took 68\,941 seconds ($\approx19$ hours) on eight
+performance cores of a consumer laptop (Apple M-series); a $10^{12}$ run
+takes 3314 seconds. The minimal doubled prime attains its maximum
+$q_{\min} = 4261$ at $n = 19\,909\,053\,765\,571$ (45 record values in
 total; Table~1 shows the tail), and the minimal undoubled prime attains
-$q_{\min} = 7129$ at $n = 470\,243\,683\,103$ (43 records). The
+$q_{\min} = 9157$ at $n = 14\,480\,831\,322\,263$ (50 records). The
 noncomposite variant of the undoubled-side record sequence reproduces
-the OEIS A002091 $b$-file exactly --- all 41 terms with
-$9 \le n \le 10^{12}$ --- providing a full independent cross-validation
-of both computations. Complete record lists and the $q_{\min}$
+the OEIS A002091 $b$-file exactly --- all 49 published terms, which
+reach $8\,567\,125\,268\,699$ --- providing a full independent
+cross-validation of both computations, and extends the sequence by one
+new term,
+\[
+a(50) = 12\,279\,230\,664\,247, \qquad q_{\min} = 8969.
+\] Complete record lists and the $q_{\min}$
 distribution histograms are provided in the repository.
 
 \begin{table}[ht]\centering
 \caption{Record values of the minimal prime $q$: left, in $n=p+2q$
-(34 records below $10^{12}$, tail shown); right, in $n=2p+q$
-(43 records, tail shown).}
+(45 records below $2\times10^{13}$, tail shown); right, in $n=2p+q$
+(50 records, tail shown).}
 \begin{tabular}{rr@{\qquad}rr}
 \toprule
 $n$ & $q_{\min}$ & $n$ & $q_{\min}$ \\
 \midrule
-766\,707\,661 & 1609 & 64\,190\,408\,687 & 5281 \\
-1\,023\,263\,789 & 1931 & 65\,399\,862\,023 & 5821 \\
-8\,032\,822\,531 & 2389 & 220\,607\,894\,851 & 5897 \\
-92\,635\,306\,249 & 2719 & 248\,391\,483\,203 & 6301 \\
-151\,318\,414\,531 & 2791 & 304\,929\,017\,803 & 6329 \\
-352\,799\,777\,983 & 2953 & 332\,468\,180\,567 & 6421 \\
-646\,341\,033\,061 & 2971 & 470\,243\,683\,103 & 7129 \\
-853\,036\,242\,229 & 3079 & & \\
+646\,341\,033\,061 & 2971 & 2\,695\,682\,504\,171 & 8017 \\
+853\,036\,242\,229 & 3079 & 5\,947\,609\,572\,643 & 8597 \\
+10\,154\,135\,153\,999 & 3851 & 8\,567\,125\,268\,699 & 8821 \\
+13\,982\,148\,897\,511 & 3907 & 12\,279\,230\,664\,247 & 8969 \\
+18\,115\,451\,658\,709 & 4093 & 14\,480\,831\,322\,263 & 9157 \\
+19\,909\,053\,765\,571 & 4261 & & \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -171,7 +173,7 @@ chance of primality, whereas $p = (n-q)/2$ in the mirrored decomposition
 carries no parity constraint; the per-candidate success probability
 halves and the record threshold in $\pi(Q)$ doubles.
 
-% TODO: 2×10^13 长跑完成后更新全部上界与记录。
+
 
 \section{Exact representation counts via FFT}\label{sec:fft}
 
