@@ -8,7 +8,6 @@
 \usepackage{hyperref}
 
 \newtheorem{conjecture}{Conjecture}
-\newtheorem{heuristic}{Heuristic}
 
 \title{Exhaustive Verification, Minimal-Prime Records, and\\
 Representation Statistics for Lemoine's Conjecture}
@@ -44,7 +43,8 @@ Lemoine representation data. All code and data are open source.
 
 \section{Introduction}
 
-Lemoine's conjecture, independently restated by Levy \cite{levy}, asserts:
+Lemoine's conjecture \cite{lemoine}, independently restated by Levy
+\cite{levy}, asserts:
 
 \begin{conjecture}[Lemoine 1895]
 Every odd integer $n>5$ admits a representation $n = p + 2q$ with $p$, $q$ prime.
@@ -63,15 +63,17 @@ $10^{13}$ \cite{oeis2091}, which implies (but nowhere formally documents)
 a verification to that bound. A recent article \cite{ndegwa} tests
 randomly sampled odd integers of up to 1500 digits by probabilistic
 primality testing; such spot checks, while consistent with the
-conjecture, do not establish an exhaustive bound. A claimed proof
-\cite{agama} was later found to be flawed; the conjecture remains open. Zhang \cite{zhang} studies an
-equivalent form of a strong version of the conjecture; another claimed
-proof \cite{ghanim} has not gained acceptance.
+conjecture, do not establish an exhaustive bound. Zhang \cite{zhang} gives an
+equivalent form of a strong version of the conjecture. Two claimed
+proofs \cite{agama, ghanim} have not gained acceptance --- the argument
+of \cite{agama} was subsequently found to be flawed --- and the
+conjecture remains open.
 
-Our contributions: (i) a single reproducible exhaustive verification to
-$2\times10^{13}$, producing both minimal-prime record sequences, one of
-which reproduces the full A002091 $b$-file and extends it by one term; (ii) exact representation counts $r(n)$
-for all odd $n\le10^7$ via FFT convolution; (iii) a numerical test of the
+Our contributions are: (i) a single reproducible exhaustive verification
+to $2\times10^{13}$, producing both minimal-prime record sequences, one
+of which reproduces the full A002091 $b$-file and extends it by one term;
+(ii) exact representation counts $r(n)$ for all odd $n\le10^7$ via FFT
+convolution, extended by windowed counts to $10^8$; (iii) a numerical test of the
 Hardy--Littlewood-type asymptotic, including the first (to our knowledge)
 empirical determination of the decay exponent of its second-order term;
 (iv) open-source, single-machine code: verification to $10^{12}$ takes
@@ -79,14 +81,16 @@ under one hour on a consumer laptop, and to $2\times10^{13}$ under a day.
 
 \section{A Hardy--Littlewood heuristic for $r(n)$}\label{sec:heuristic}
 
-Model the primality of the two components independently: an integer of
-size $t$ is prime with ``probability'' $1/\log t$. For odd $n$ and a
-random $q \in [3, (n-3)/2]$, set $p = n - 2q$. The naive expectation is
+We model the primality of the two components as independent events: an
+integer of size $t$ is prime with ``probability'' $1/\log t$. For odd
+$n$ and a random $q \in [3, (n-3)/2]$, set $p = n - 2q$. The naive
+expectation for $r(n)$ is then
 $I(n) = \sum_{q=3}^{(n-3)/2} \frac{1}{\log q\,\log(n-2q)}$.
 Local corrections at each prime $\ell$ multiply this by
 \[
 \delta_\ell =
-\frac{\Pr[\ell \nmid q \text{ and } \ell \nmid n-2q]}{\Pr[\ell\nmid q]\Pr[\ell\nmid p]}.
+\frac{\Pr[\ell \nmid q \text{ and } \ell \nmid p]}{\Pr[\ell\nmid q]\,\Pr[\ell\nmid p]},
+\qquad p = n-2q.
 \]
 For $\ell = 2$: $p = n-2q$ is automatically odd, so $\delta_2 = 2$.
 For odd $\ell \nmid n$: the events $\ell \mid q$ and $\ell \mid n-2q$
@@ -111,11 +115,13 @@ problem \cite{hl}, with the same twin-prime constant and singular series.
 \section{Exhaustive verification and minimal-prime records}\label{sec:verify}
 
 \subsection{Algorithm}
-Segmented odd-only bitmap sieve; for each odd $n$ we search the minimal
-$q$ (list of primes $q < 2\times10^5$) with $n-2q$ prime, using a window
-extending $2\times10^5$ below the segment. A second window at half height
-serves the mirrored decomposition $n = 2p+q$. Eight threads; segment
-length $2^{28}$. Work is dominated by the segmented sieving,
+We use a segmented, odd-only bitmap sieve. For each odd $n$ the program
+searches the minimal $q$ (over a fixed list of primes $q < 2\times10^5$)
+with $n-2q$ prime, using a primality window extending $4\times10^5$
+below the current segment; a second window at half height serves the
+mirrored decomposition $n = 2p+q$. Segments of length $2^{28}$ are
+distributed over eight threads. Work is dominated by the segmented
+sieving:
 $O(N\log\log N)$ bit operations overall with $O(\sqrt N)$ memory for the
 base primes plus $O(1)$ per-thread window bitmaps (32\,MB each); the
 decomposition search itself averages fewer than four primality lookups
@@ -129,9 +135,10 @@ $n=2p+q$. The full run took 68\,941 seconds ($\approx19$ hours) on eight
 performance cores of a consumer laptop (Apple M-series); a $10^{12}$ run
 takes 3314 seconds. The minimal doubled prime attains its maximum
 $q_{\min} = 4261$ at $n = 19\,909\,053\,765\,571$ (45 record values in
-total; Table~1 shows the tail), and the minimal undoubled prime attains
+total; Table~\ref{tab:records} shows the tail), and the minimal undoubled prime attains
 $q_{\min} = 9157$ at $n = 14\,480\,831\,322\,263$ (50 records). The
-noncomposite variant of the undoubled-side record sequence reproduces
+noncomposite variant of the undoubled-side record sequence (records of
+A185091 \cite{oeis185091}) reproduces
 the OEIS A002091 $b$-file exactly --- all 49 published terms, which
 reach $8\,567\,125\,268\,699$ --- providing a full independent
 cross-validation of both computations, and extends the sequence by one
@@ -144,7 +151,8 @@ distribution histograms are provided in the repository.
 \begin{table}[ht]\centering
 \caption{Record values of the minimal prime $q$: left, in $n=p+2q$
 (45 records below $2\times10^{13}$, tail shown); right, in $n=2p+q$
-(50 records, tail shown).}
+(50 records, tail shown). Complete lists are in the repository.}
+\label{tab:records}
 \begin{tabular}{rr@{\qquad}rr}
 \toprule
 $n$ & $q_{\min}$ & $n$ & $q_{\min}$ \\
@@ -165,9 +173,9 @@ $q$ fails for a given $n$ is $1 - O(K(n)/\log n)$, so
 $\Pr[q_{\min} > Q] \approx \exp(-c\,K(n)\,\pi(Q)/\log n)$ and record
 values should satisfy $\pi(q_{\min}) \asymp \alpha (\log n)^2$ up to
 $\log\log$ factors. The data agree: a one-parameter fit through the
-records with $n > 10^3$ gives $\alpha_A = 0.60$ (28 records) for
-$n = p+2q$ and $\alpha_B = 1.17$ (34 records) for $n = 2p+q$. The ratio
-$\alpha_B/\alpha_A = 1.94 \approx 2$ has a clean explanation: in
+records with $n > 10^3$ gives $\alpha_A = 0.596$ (39 records) for
+$n = p+2q$ and $\alpha_B = 1.196$ (41 records) for $n = 2p+q$. The ratio
+$\alpha_B/\alpha_A = 2.01$ has a clean explanation: in
 $n = p+2q$ the residual $p = n-2q$ is forced to be odd, doubling its
 chance of primality, whereas $p = (n-q)/2$ in the mirrored decomposition
 carries no parity constraint; the per-candidate success probability
@@ -177,7 +185,8 @@ halves and the record threshold in $\pi(Q)$ doubles.
 
 \section{Exact representation counts via FFT}\label{sec:fft}
 
-$r(n)$ for all odd $n \le 10^7$ is the convolution of the prime indicator
+The representation function $r(n)$ (OEIS A046927 \cite{oeis46927}) for
+all odd $n \le 10^7$ is the convolution of the prime indicator
 with the doubled-prime indicator, computed exactly by 64-bit-float FFT of
 length $2^{25}$ and rounding (max entry $\approx1.3\times10^5$, far below
 the $2^{53}$ integer threshold; spot checks against brute force agree).
@@ -216,6 +225,13 @@ windows drift coherently, as expected if $g(n)$ carries an oscillatory
 factor $\sum_\gamma \cos(\gamma\log n + \phi_\gamma)$ from the nontrivial
 zeros $\rho = \tfrac12 + i\gamma$ of $\zeta(s)$.
 
+\begin{figure}[ht]\centering
+\includegraphics[width=.92\textwidth]{../figures/second_order_1e8.png}
+\caption{Power-law decay of the deviation from the Hardy--Littlewood
+prediction; the dashed line has slope $-\tfrac12$.}
+\label{fig:power}
+\end{figure}
+
 \subsection{Detecting the zeros}\label{sec:zeros}
 To test this directly we densify the sampling to 224 windows
 ($10^{4.7}$--$10^8$) and compute a weighted least-squares periodogram of
@@ -232,6 +248,14 @@ while frequencies away from zeros show near-background power. The summed
 power at the first 13 zero ordinates is $219.5$ against a white-noise
 expectation of $26$.
 
+\begin{figure}[ht]\centering
+\includegraphics[width=.92\textwidth]{../figures/zero_periodogram.png}
+\caption{Weighted periodogram of the power-law residuals of $g(n)$.
+Dashed lines mark the ordinates $\gamma_k$ of the first nontrivial zeros
+of $\zeta(s)$.}
+\label{fig:zeros}
+\end{figure}
+
 \emph{Robustness.} The analysis was repeated with window half-widths
 $W=100$ and $W=500$ (baseline $W=250$) and with the discrete sum $I(n)$
 replaced by a midpoint-rule integral. The $I(n)$ discretization is
@@ -244,6 +268,14 @@ varies with the weighting, so we do not interpret the relative
 amplitudes. The fitted exponent is stable at
 $\theta \in [0.517, 0.525]$ across all configurations
 (Figure~\ref{fig:robust}).
+
+\begin{figure}[ht]\centering
+\includegraphics[width=.92\textwidth]{../figures/zero_robustness.png}
+\caption{Periodograms under four analysis configurations: window
+half-widths $W\in\{100,250,500\}$ and two discretizations of $I(n)$.
+Peaks stay locked to the zero ordinates (dashed).}
+\label{fig:robust}
+\end{figure}
 
 \emph{Joint fit and trials-corrected significance.}
 Fitting all thirteen frequencies simultaneously (fixed at the zero
@@ -271,31 +303,15 @@ formula (dashed; median-normalized).}
 \label{fig:amps}
 \end{figure}
 
-\begin{figure}[ht]\centering
-\includegraphics[width=.92\textwidth]{../figures/zero_robustness.png}
-\caption{Periodograms under four analysis configurations: window
-half-widths $W\in\{100,250,500\}$ and two discretizations of $I(n)$.
-Peaks stay locked to the zero ordinates (dashed).}
-\label{fig:robust}
-\end{figure}
 
-\begin{figure}[ht]\centering
-\includegraphics[width=.92\textwidth]{../figures/zero_periodogram.png}
-\caption{Weighted periodogram of the power-law residuals of $g(n)$.
-Dashed lines mark the ordinates $\gamma_k$ of the first nontrivial zeros
-of $\zeta(s)$.}
-\label{fig:zeros}
-\end{figure}
 
-\begin{figure}[ht]\centering
-\includegraphics[width=.92\textwidth]{../figures/second_order_1e8.png}
-\caption{Power-law decay of the deviation from the Hardy--Littlewood
-prediction; the dashed line has slope $-\tfrac12$.}
-\label{fig:power}
-\end{figure}
+
 
 \section{Data and code availability}
-% GitHub 仓库链接；数据文件清单（记录 CSV、直方图、拟合数据）。
+All programs (C++ verifier, Python analysis scripts), the complete
+record sequences, $q_{\min}$ distribution histograms, fit data, and the
+scripts generating every figure are available at
+\url{https://github.com/YunyueLi/lemoine-conjecture}.
 
 \begin{thebibliography}{99}
 \bibitem{lemoine} E. Lemoine, L'interm\'ediaire des math\'ematiciens 1 (1894), 179; 3 (1896), 151.
@@ -303,11 +319,11 @@ prediction; the dashed line has slope $-\tfrac12$.}
 \bibitem{hl} G. H. Hardy and J. E. Littlewood, Some problems of `Partitio Numerorum' III, Acta Math. 44 (1923), 1--70.
 \bibitem{helfgott} H. A. Helfgott, The ternary Goldbach conjecture is true, arXiv:1312.7748 (2013).
 \bibitem{oesilva} T. Oliveira e Silva, S. Herzog, S. Pardi, Empirical verification of the even Goldbach conjecture and computation of prime gaps up to $4\cdot10^{18}$, Math. Comp. 83 (2014), 2033--2060.
-\bibitem{mathworld-levy} E. W. Weisstein, Levy's Conjecture, MathWorld.
-\bibitem{brainhappy} Lemoine's conjecture verified to $10^{10}$, makethebrainhappy.com, June 2019.
+\bibitem{mathworld-levy} E. W. Weisstein, Levy's Conjecture, MathWorld, \url{https://mathworld.wolfram.com/LevysConjecture.html}.
+\bibitem{brainhappy} MakeTheBrainHappy, Lemoine's conjecture verified to $10^{10}$, blog post, June 2019, \url{https://www.makethebrainhappy.com/2019/06/lemoines-conjecture-verified-to-1010.html}.
 \bibitem{oeis2091} OEIS Foundation, Sequence A002091 (comment by H. Pfoertner, Sep 2011).
 \bibitem{ndegwa} D. Ndegwa et al., Extending computational verification of Lemoine's conjecture to 1500 digit odd numbers, IJMTT 72(3) (2026), 49--52.
-\bibitem{agama} T. Agama and B. Gensel, A proof of Lemoine's conjecture by circles of partition, arXiv:1709.05335 (2021); flawed, see discussion in the literature.
+\bibitem{agama} T. Agama and B. Gensel, A proof of Lemoine's conjecture by circles of partition, arXiv:1709.05335; the argument was subsequently found to be flawed.
 \bibitem{lz} A. Languasco and A. Zaccagnini, The number of Goldbach representations of an integer, Proc. Amer. Math. Soc. 140 (2012), 795--804.
 \bibitem{zhang} S. Zhang, An equivalent form of strong Lemoine conjecture and several relevant results, Wuhan Univ. J. Nat. Sci. 24(3) (2019), 229--232.
 \bibitem{ghanim} M. Ghanim, Confirmation of the Lemoine--Levy conjecture, Global J. Adv. Eng. Tech. Sci. 8(12) (2021), 1--7.
