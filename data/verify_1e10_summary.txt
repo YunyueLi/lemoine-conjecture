@@ -1,0 +1,1 @@
+verified all odd n in (5, 10000000000]: 4999999997 numbers, max q_min = 2389, total 79.7s

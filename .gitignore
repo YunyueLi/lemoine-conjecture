@@ -1,0 +1,7 @@
+.venv/
+src/verify
+src/verify2
+*.log
+paper/main.pdf
+nohup.out
+.DS_Store
