@@ -60,3 +60,10 @@ Project notes in Chinese: `PLAN.zh.md`.
 ## License
 
 MIT
+
+## Provenance
+
+This project was carried out in collaboration with Claude (Anthropic), an AI
+assistant: the algorithms, code, analyses, and paper draft were substantially
+AI-produced under human direction. All results are reproducible from this
+repository.
