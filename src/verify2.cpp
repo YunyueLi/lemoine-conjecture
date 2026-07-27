@@ -4,7 +4,8 @@
 //   B 侧：n = 2p + q，最小的素数 q
 //   B'侧：n = 2p + q，最小的非合数 q（允许 q = 1，用于与 OEIS A002091 交叉验证）
 // 输出（data/ 下）：三个记录序列 CSV、A/B 侧最小值直方图 CSV。
-// 用法：./verify2 NMAX [threads]
+// 用法：./verify2 NMAX [threads] [START]
+//   可选的 START（默认 7）：只扫描 [START, NMAX] 区间，用于独立复核某一段。
 #include <cstdio>
 #include <cstdlib>
 #include <cstdint>
@@ -25,6 +26,8 @@ struct Rec { uint64_t n; uint32_t q; };
 int main(int argc, char** argv) {
     uint64_t NMAX = (argc > 1) ? strtoull(argv[1], nullptr, 10) : 1000000000000ULL;
     unsigned nthreads = (argc > 2) ? (unsigned)atoi(argv[2]) : 8;
+    uint64_t START = (argc > 3) ? strtoull(argv[3], nullptr, 10) : 7;
+    if (START < 7) START = 7;
     auto t0 = chrono::steady_clock::now();
 
     // 基础素数：到 max(sqrt(NMAX), QMAX)，后者保证候选 q 列表完整
@@ -44,9 +47,9 @@ int main(int argc, char** argv) {
     fprintf(stderr, "base primes: %zu (R=%" PRIu64 "), q candidates: %zu\n",
             base.size(), R, qs.size());
 
-    atomic<uint64_t> next_seg{0}, fail_count{0};
+    atomic<uint64_t> next_seg{(START - 1) / SEG}, fail_count{0};
     atomic<uint64_t> segs_done{0};
-    uint64_t total_segs = (NMAX + SEG - 1) / SEG;
+    uint64_t total_segs = (NMAX + SEG - 1) / SEG - (START - 1) / SEG;
     mutex merge_mtx;
     vector<Rec> candA, candB, candBn;                    // 各线程的候选记录（合并后再全局筛）
     vector<uint64_t> histA(qs.size(), 0), histB(qs.size(), 0);
@@ -106,7 +109,9 @@ int main(int argc, char** argv) {
             (void)m1; (void)m2;
 
             // ---- 主循环 ----
-            for (uint64_t n = (lo < 7 ? 7 : lo) | 1; n <= hi; n += 2) {
+            uint64_t nstart = (lo < 7 ? 7 : lo);
+            if (nstart < START) nstart = START;
+            for (uint64_t n = nstart | 1; n <= hi; n += 2) {
                 // A 侧：n = p + 2q，最小 q
                 bool ok = false;
                 for (size_t i = 0; i < qs.size(); i++) {

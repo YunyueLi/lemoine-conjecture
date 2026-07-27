@@ -1,0 +1,1 @@
+NMAX=20000000000000 threads=8 fails=0 maxA=4261 maxB=9157 maxBn=8969 total 68941s
